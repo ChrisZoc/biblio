@@ -5,7 +5,9 @@ import java.net.ServerSocket;
 import java.net.Socket;
 
 public class Server {
+
 	private static int port = 60021;
+
 
 	public static void main(String[] args) throws IOException {
 		startServer();
