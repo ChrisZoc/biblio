@@ -2,13 +2,14 @@ package serial;
 
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 
 public class Chunk implements Serializable{
 	
 	private byte id;
 	private byte[] name;
 	private byte[] info;
-	private String[] toSyncList;
+	private ArrayList<String> listOfFiles;
 		
 	public Chunk() {
 		super();
@@ -33,10 +34,10 @@ public class Chunk implements Serializable{
 	public void setInfo(byte[] info) {
 		this.info = info;
 	}
-	public String[] getToSyncList() {
-		return toSyncList;
+	public ArrayList<String> getList() {
+		return listOfFiles;
 	}
-	public void setToSyncList(String[] toSyncList) {
-		this.toSyncList = toSyncList;
+	public void setList(ArrayList<String> toSyncList) {
+		this.listOfFiles = toSyncList;
 	}
 }
