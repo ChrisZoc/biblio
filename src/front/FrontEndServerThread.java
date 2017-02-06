@@ -34,35 +34,21 @@ public class FrontEndServerThread implements Runnable {
 			toClient.flush();
 			ObjectInput fromClient = new ObjectInputStream(in);
 			System.out.println("Streams ready.");
-			registered = false;
 			try {
-				d = (Chunk) fromClient.readObject();
-				for (String user : FrontEnd.getUsers()) {
-					if (d.getName() == user){
-						registered = true;
-						break;
-					}
-				}
-				if(!registered){
-					d.setId(-1); //usuario no registrado
-					toClient.writeObject(d);
-					fromClient.close();
-					toClient.close();
-				} else {
-					d.setId(1); //usuario registrado
-					toClient.writeObject(d);
 					d = (Chunk) fromClient.readObject();
 					FrontEnd.add(new Request(soc, d));
-				}
-				runner.join();
+					System.out.println("agregado a la cola");
+				
+				//runner.join();
 			} catch (ClassNotFoundException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+//			} catch (InterruptedException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
 			}
-		} catch (IOException e1) {
+			} catch (IOException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}

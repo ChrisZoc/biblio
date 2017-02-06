@@ -14,7 +14,7 @@ hs_err_pid*
 
 #folders
 folderRec/
-folderShared/
+SharedFolder/
 build/*
 *.class
 # BlueJ files

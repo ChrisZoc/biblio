@@ -41,16 +41,12 @@ public class FrontEndClientThread implements Runnable {
 			ObjectOutput toServer = new ObjectOutputStream(servsoc.getOutputStream());
 
 			toServer.writeObject(toSend);
-			System.out.println("File '" + toSend + "' requested.");
+			System.out.println("File '" + toSend.getName() + "' requested.");
 			toServer.flush();
-
-			Chunk d;
-
-			d = (Chunk) fromServer.readObject();
+			Chunk d = (Chunk) fromServer.readObject();
 			toClient.writeObject(d);
-
 			toClient.flush();
-
+			fromServer.close();
 			soc.close();
 			servsoc.close();
 			System.out.println("Terminating ClientThread...");

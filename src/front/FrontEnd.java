@@ -25,19 +25,13 @@ public class FrontEnd {
 	}
 
 	public static Request next() {
-		return cola.remove(0);
+		return cola.get(0);
 	}		
-
-	public static ArrayList<String> getUsers() {
-		return users;
-	}
 
 	public static void main(String args[]) throws IOException {
 		cola = new ArrayList<Request>();
 		ServerIPList lista = new ServerIPList();
 		servers = lista.getIplist();
-		UserList usuarios = new UserList();
-		users = usuarios.getUserList();
 		startServer();
 		startClient();
 	}
@@ -47,6 +41,7 @@ public class FrontEnd {
 
 			@Override
 			public void run() {
+				System.out.println("corriendo servidor...");
 				ServerSocket ser = null;
 				try {
 					ser = new ServerSocket(port);
@@ -80,16 +75,22 @@ public class FrontEnd {
 		(new Thread() {			
 			@Override
 			public void run() {
+				System.out.println("corriendo cliente...");
 				int numServers = servers.size();
 				int counter = 0;
+				int last=0;
 				try {
 					while(true){
-						if(!cola.isEmpty()){
-							new FrontEndClientThread(servers.get(counter%numServers), cola.remove(0));
+						System.out.println("escuchando cola..");
+						Thread.sleep(5000);
+						if(cola.size()!=0){
+							System.out.println("corriendo peticion");
+							new FrontEndClientThread(servers.get(counter%numServers), cola.get(0));
+							cola.remove(0);
 							counter++;
 						}
 					}
-				}catch (IOException e){
+				}catch (IOException | InterruptedException e){
 					
 				}
 				

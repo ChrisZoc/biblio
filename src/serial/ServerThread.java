@@ -1,6 +1,7 @@
 package serial;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInput;
@@ -14,9 +15,14 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 
+import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
+
+
 public class ServerThread implements Runnable {
 	private Thread runner;
 	private Socket soc;
+	private static ArrayList<String> users;
 
 	public ServerThread(Socket ss) {
 		runner = new Thread(this);
@@ -35,7 +41,8 @@ public class ServerThread implements Runnable {
 			ObjectOutput toClient = new ObjectOutputStream(out);
 			toClient.flush();
 			ObjectInput fromClient = new ObjectInputStream(in);
-
+			UserList usuarios = new UserList();
+			users = usuarios.getUserList();
 			System.out.println("Streams ready.");
 			try {
 				System.out.println("Reading InputStream...");
@@ -43,11 +50,22 @@ public class ServerThread implements Runnable {
 				System.out.println("Chunk with id " + d.getId() + " received.");
 				File sharedFolder = new File("./SharedFolder");
 
-				if (d.getId() == -1) { // list request					
+				if (d.getId() == -1) { // list request
+					boolean registered=false;
+					for (String user : users) {
+						if (d.getUser().equals(user)){
+							registered = true;
+							break;
+						}
+					}if(registered){
+						d.setId(1);
+					}else{
+						d.setId(0);
+						}
 					ArrayList<String> list = new ArrayList<String>(); 
 					System.out.println("Files in the shared folder:");
 					for (String file : sharedFolder.list()) {
-						System.out.println("> " + file);
+						System.out.println(">"+file);
 						list.add(file);
 					}
 					d.setList(list);
@@ -56,11 +74,11 @@ public class ServerThread implements Runnable {
 					int id = Integer.parseInt(d.getName());
 					String filename = sharedFolder.list()[id];
 					System.out.println("The book with id '" + id + "' has been requested ");
-					
 					Path path = Paths.get("./SharedFolder/" + filename);
 					byte[] data;
 					System.out.println("File ready for transfer.");
 					try {
+						
 						data = Files.readAllBytes(path);
 						d.setInfo(data);
 						d.setName(filename);
@@ -73,6 +91,8 @@ public class ServerThread implements Runnable {
 							"Chunk with file '" + filename + "' has been sent!");
 					toClient.flush();
 					toClient.close();
+				}else if(d.getId() == 1){
+				guardarCarga(d);
 				}
 				System.out.println("Terminating ServerThread...");
 				soc.close();
@@ -90,4 +110,21 @@ public class ServerThread implements Runnable {
 		}
 		// s.close();
 	}
+
+	private void guardarCarga(Chunk d) throws IOException {
+		System.out.println("Writing new book file called"+ d.getName()+"...");
+		FileOutputStream fos = null;
+			try {
+				fos = new FileOutputStream("./SharedFolder/"+d.getName());
+				fos.write(d.getInfo());
+				fos.close();
+				System.out.println("Nuevo libro cargado exitosamente!");
+			} catch (Exception ex) {
+				ex.printStackTrace();
+			
+		
+	}
+
 }
+		
+	}

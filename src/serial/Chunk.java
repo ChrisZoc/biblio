@@ -10,7 +10,14 @@ public class Chunk implements Serializable{
 	private byte[] name;
 	private byte[] info;
 	private ArrayList<String> listOfFiles;
+	private String User;
 		
+	public String getUser() {
+		return User;
+	}
+	public void setUser(String user) {
+		User = user;
+	}
 	public Chunk() {
 		super();
 		byte[] aux = {0};

@@ -28,6 +28,8 @@ public class ServerIPList {
 				server[0] = aux.nextToken();
 				server[1] = aux.nextToken();
 				iplist.add(server);
+				System.out.println(server[0]);
+				System.out.println(server[1]);
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
