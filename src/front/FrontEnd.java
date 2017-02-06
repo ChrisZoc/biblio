@@ -1,6 +1,7 @@
 package front;
 
 import java.io.IOException;
+import java.net.ConnectException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -25,13 +26,19 @@ public class FrontEnd {
 	}
 
 	public static Request next() {
-		return cola.get(0);
-	}		
+		return cola.remove(0);
+	}
+
+	public static ArrayList<String> getUsers() {
+		return users;
+	}
 
 	public static void main(String args[]) throws IOException {
 		cola = new ArrayList<Request>();
 		ServerIPList lista = new ServerIPList();
 		servers = lista.getIplist();
+//		UserList usuarios = new UserList();
+//		users = usuarios.getUserList();
 		startServer();
 		startClient();
 	}
@@ -41,7 +48,6 @@ public class FrontEnd {
 
 			@Override
 			public void run() {
-				System.out.println("corriendo servidor...");
 				ServerSocket ser = null;
 				try {
 					ser = new ServerSocket(port);
@@ -72,29 +78,32 @@ public class FrontEnd {
 	}
 
 	private static void startClient() throws IOException {
-		(new Thread() {			
+		(new Thread() {
 			@Override
 			public void run() {
-				System.out.println("corriendo cliente...");
 				int numServers = servers.size();
 				int counter = 0;
-				int last=0;
-				try {
-					while(true){
-						System.out.println("escuchando cola..");
-						Thread.sleep(5000);
-						if(cola.size()!=0){
-							System.out.println("corriendo peticion");
-							new FrontEndClientThread(servers.get(counter%numServers), cola.get(0));
+
+				while (true) {
+					if (!cola.isEmpty()) {
+						System.out.println("New request found.");
+						try {
+							new FrontEndClientThread(servers.get(counter % numServers), cola.get(0));
 							cola.remove(0);
-							counter++;
+						} catch (ConnectException ce) {
+
 						}
+						counter++;
 					}
-				}catch (IOException | InterruptedException e){
-					
+					try {
+						Thread.sleep(10);
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
-				
-			}			
+
+			}
 		}).start();
 	}
 

@@ -14,11 +14,13 @@ public class FrontEndClientThread implements Runnable {
 	Socket soc;
 	Socket servsoc;
 	Chunk toSend;
+	ObjectOutput toClient;
 
 	public FrontEndClientThread(String[] server, Request peticion) throws ConnectException {
 		runner = new Thread(this);
 		this.soc = peticion.getSoc();
 		this.toSend = peticion.getReq();
+		this.toClient = peticion.getToClient();
 		try {
 			servsoc = new Socket(server[0], Integer.parseInt(server[1]));
 		} catch (ConnectException e) {
@@ -36,17 +38,25 @@ public class FrontEndClientThread implements Runnable {
 	@Override
 	public void run() {
 		try {
-			ObjectInputStream fromServer = new ObjectInputStream(servsoc.getInputStream());
-			ObjectOutput toClient = new ObjectOutputStream(soc.getOutputStream());
+			ObjectOutput toClient = this.toClient;
+			toClient.flush();
 			ObjectOutput toServer = new ObjectOutputStream(servsoc.getOutputStream());
+			toServer.flush();
+			ObjectInputStream fromServer = new ObjectInputStream(servsoc.getInputStream());
 
 			toServer.writeObject(toSend);
-			System.out.println("File '" + toSend.getName() + "' requested.");
+			System.out.println("Chunk with id '" + toSend.getId() + "' sent to server.");
 			toServer.flush();
-			Chunk d = (Chunk) fromServer.readObject();
+
+			Chunk d;
+
+			d = (Chunk) fromServer.readObject();
+			System.out.println("Chunk with id '" + toSend.getId() + "' received from server.");
+			
 			toClient.writeObject(d);
+			System.out.println("Chunk with id '" + toSend.getId() + "' sent to client.");
 			toClient.flush();
-			fromServer.close();
+
 			soc.close();
 			servsoc.close();
 			System.out.println("Terminating ClientThread...");

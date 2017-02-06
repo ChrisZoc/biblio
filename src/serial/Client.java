@@ -109,7 +109,7 @@ public class Client extends JFrame {
 					lista += aux.substring(0, 25) + "código del libro:" + i + "\n";
 					textArea.setText(lista);
 					i++;
-					
+
 					toClient.flush();
 					toClient.close();
 				} catch (IOException e1) {
@@ -122,7 +122,7 @@ public class Client extends JFrame {
 					} catch (Exception e1) {
 						e1.printStackTrace();
 					}
-			}
+				}
 			}
 		});
 		btnCargar.setBounds(237, 311, 187, 23);
@@ -159,7 +159,8 @@ public class Client extends JFrame {
 					soc = new Socket(host, port);
 					System.out.println("Connected.");
 
-					Chunk d = new Chunk();
+					Chunk d =null;
+					d=new Chunk();
 
 					System.out.println("Initializing streams...");
 					OutputStream out = soc.getOutputStream();
@@ -178,7 +179,7 @@ public class Client extends JFrame {
 					toServer.flush();
 
 					System.out.println("Book requested code : " + d.getName());
-					
+
 					d = (Chunk) fromServer.readObject();
 
 					JFileChooser chooser = new JFileChooser();
@@ -278,7 +279,7 @@ public class Client extends JFrame {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-				
+
 				Chunk d = new Chunk();
 				d.setId(-1);
 				d.setName("list");
@@ -297,19 +298,21 @@ public class Client extends JFrame {
 				d = (Chunk) fromServer.readObject();
 				System.out.println("List received.");
 				if(d.getId()==1){
-				ArrayList<String> list = d.getList();
-				System.out.println("Loading books...");
-				if(list.size()!=0){
-				for (String book : list) {
-					aux = book + "                                ";
-					lista += aux.substring(0, 25) + "código del libro:" + i + "\n";
-					i++;
-				}}else{System.out.println("lista vacia");}
-				textArea.setText(lista);
-				btnCargarLibros.setEnabled(false);
-				btnCargarUnLibro.setEnabled(true);
-				btnDescargarUnLibro.setEnabled(true);
-				fromServer.close();
+					ArrayList<String> list = d.getList();
+					System.out.println("Loading books...");
+					if(list.size()!=0){
+						for (String book : list) {
+							aux = book + "                                ";
+							lista += aux.substring(0, 25) + "código del libro:" + i + "\n";
+							i++;
+						}}else{System.out.println("lista vacia");}
+					textArea.setText(lista);
+					btnCargarLibros.setEnabled(false);
+					btnCargarUnLibro.setEnabled(true);
+					btnDescargarUnLibro.setEnabled(true);
+					fromServer.close();
+					out.flush();
+					in.close();
 				}else if(d.getId()==0){
 					JOptionPane.showMessageDialog(null, "El usuario no está registrado ");
 				}
