@@ -39,9 +39,7 @@ import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.JLabel;
-
 import javax.swing.JOptionPane;
-
 import javax.swing.JFileChooser;
 import javax.swing.JSpinner;
 
@@ -50,14 +48,9 @@ public class Client extends JFrame {
 	private JPanel contentPane;
 	private JTextField textField_1;
 	private static Socket soc;
-
-	private static int port=60020;
-
+	private static int port = 60020;
 	String host = "localhost";
 
-	/**
-	 * Launch the application.
-	 */
 	public static void main(String[] args) {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
@@ -99,7 +92,8 @@ public class Client extends JFrame {
 		textArea.setEditable(false);
 		textArea.setFont(new java.awt.Font("Monospaced", java.awt.Font.PLAIN, 13));
 		contentPane.add(textArea);
-		JScrollPane sp = new JScrollPane(textArea,JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
+
+		JScrollPane sp = new JScrollPane(textArea, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
 				JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
 		textArea.setBounds(58, 11, 327, 179);
 		textArea.setLineWrap(true);
@@ -115,7 +109,6 @@ public class Client extends JFrame {
 		btnDescargar.setEnabled(false);
 		btnDescargar.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-
 				try {
 
 					System.out.println("Connecting...");
@@ -159,20 +152,18 @@ public class Client extends JFrame {
 							ex.printStackTrace();
 						}
 					}
-			
+
 				} catch (IOException e1) {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				} catch (ClassNotFoundException e1) {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
-
 				} finally {
 					// Closing the socket
 					try {
 						soc.close();
 					} catch (Exception e1) {
-
 						e1.printStackTrace();
 					}
 				}
@@ -198,14 +189,12 @@ public class Client extends JFrame {
 		btnCargarUnLibro.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				String userhome = System.getProperty("user.home");
-
 				JFileChooser fc = new JFileChooser(userhome + "\\Desktop");
 				fc.setPreferredSize(new Dimension(800, 900));
 				int seleccion = fc.showOpenDialog(contentPane);
 				if (seleccion == JFileChooser.APPROVE_OPTION) {
 
 					File fichero = fc.getSelectedFile();
-
 					textField_1.setText(fichero.getName());
 					btnCargar.setEnabled(true);
 				}
@@ -220,7 +209,6 @@ public class Client extends JFrame {
 		contentPane.add(textField_1);
 		textField_1.setColumns(10);
 
-
 		JButton btnCargarLibros = new JButton("Cargar Libros");
 		btnCargarLibros.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
@@ -231,7 +219,6 @@ public class Client extends JFrame {
 					e.printStackTrace();
 				}
 			}
-
 
 			private void RequestBooks() throws UnknownHostException, IOException, ClassNotFoundException {
 				try {
@@ -265,23 +252,23 @@ public class Client extends JFrame {
 				d = (Chunk) fromServer.readObject();
 				System.out.println("List received.");
 
-				String[] list = d.getToSyncList();
+				ArrayList<String> list = d.getList();
 				int i = 0;
 				String aux = "";
 				for (String book : list) {
 					aux = book + "                                ";
-					lista += aux.substring(0, 25) + "cÃ³digo del libro:" + i + "\n";
-
-
+					lista += aux.substring(0, 25) + "código del libro:" + i + "\n";
 					i++;
 				}
 				textArea.setText(lista);
 				btnCargarLibros.setEnabled(false);
 				btnCargarUnLibro.setEnabled(true);
 				btnDescargarUnLibro.setEnabled(true);
+
 			}
 		});
 		btnCargarLibros.setBounds(165, 215, 114, 23);
 		contentPane.add(btnCargarLibros);
+
 	}
 }

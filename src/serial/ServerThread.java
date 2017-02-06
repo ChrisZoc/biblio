@@ -1,7 +1,5 @@
 package serial;
 
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -14,43 +12,22 @@ import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 
-
-public class ServerThread   {
+public class ServerThread implements Runnable {
 	private Thread runner;
 	private Socket soc;
 
-
 	public ServerThread(Socket ss) {
+		runner = new Thread(this);
 		soc = ss;
 		System.out.println("Initializing ServerThread...");
-		sendBooksList(soc);
+		runner.run();
 	}
 
-	private void sendBooksList(Socket skt) {
-		ArrayList<String> my =  new ArrayList<String>();
-
-		sharedFolder = new File(sharedfolder);
-		if (!sharedFolder.exists()) {
-			sharedFolder.mkdirs();
-			System.out.println("No shared folder detected, creating.....Done!");
-
-		} else {
-			System.out.println("Shared folder detected.");
-		}
-		actualFileList = sharedFolder.list();
-		Chunk List = null;
-		for (String file : actualFileList) {
-			my.add(file);
-			System.out.println(file);
-		}
-		List=new Chunk();
-		List.setId(0);
-		List.setName("List");
-		List.setList(my); 
-
+	@Override
+	public void run() {
 		try {
-
 			Chunk d = null;
 			System.out.println("Initializing streams...");
 			OutputStream out = soc.getOutputStream();
@@ -67,11 +44,13 @@ public class ServerThread   {
 				File sharedFolder = new File("./SharedFolder");
 
 				if (d.getId() == -1) { // list request					
-					d.setToSyncList(sharedFolder.list());
+					ArrayList<String> list = new ArrayList<String>(); 
 					System.out.println("Files in the shared folder:");
-					for (String file : d.getToSyncList()) {
+					for (String file : sharedFolder.list()) {
 						System.out.println("> " + file);
+						list.add(file);
 					}
+					d.setList(list);
 					toClient.writeObject(d);
 				} else if (d.getId() == 0){ // download book
 					int id = Integer.parseInt(d.getName());
@@ -94,48 +73,21 @@ public class ServerThread   {
 							"Chunk with file '" + filename + "' has been sent!");
 					toClient.flush();
 					toClient.close();
-
 				}
-			} while (!complete);
-			System.out.println("File ready for transfer, sending...");
-			try {
-				clientSocket=new Socket("localhost",60022);
-				data = Files.readAllBytes(path);
-				toSend = new Chunk();
-				toSend.setInfo(data);
-				toSend.setName(my.get(Integer.parseInt(d.getName())));
-				toSend.setId(0);
-				OutputStream o = clientSocket.getOutputStream();
-				ObjectOutput s = new ObjectOutputStream(o);
-				s.writeObject(toSend);
-				s.flush();
-				s.close();
-			} catch (IOException e) {
+				System.out.println("Terminating ServerThread...");
+				soc.close();
+				runner.join();
+			} catch (ClassNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-		}else if(d.getId()==1){
-
-
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
 		}
-	}
-
-	private boolean isCompletelyWritten(File file) throws InterruptedException  {
-		RandomAccessFile stream = null;
-		try {
-			stream = new RandomAccessFile(file, "rw");
-			return true;
-		} catch (Exception e) {
-			Thread.sleep(1000);
-		} finally {
-			if (stream != null) {
-				try {
-					stream.close();
-				} catch (IOException e) {
-					System.out.println("Exception closing file " + file.getName());
-				}
-			}
-		}
-		return false;
+		// s.close();
 	}
 }
