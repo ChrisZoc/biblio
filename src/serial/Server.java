@@ -1,5 +1,6 @@
 package serial;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -7,9 +8,24 @@ import java.net.Socket;
 public class Server {
 
 	private static int port = 60021;
+	private static String sharedfolder = "./Libros";	
+	
+	public static String getSharedfolder() {
+		return sharedfolder;
+	}
 
+	public static void setSharedfolder(String sharedfolder) {
+		Server.sharedfolder = sharedfolder;
+	}
 
 	public static void main(String[] args) throws IOException {
+		File sharedFolder = new File(sharedfolder);
+		if (!sharedFolder.exists()) {
+			sharedFolder.mkdirs();
+			System.out.println("No shared folder detected, creating.....Done!");
+		} else {
+			System.out.println("Shared folder detected.");
+		}
 		startServer();
 	}
 	

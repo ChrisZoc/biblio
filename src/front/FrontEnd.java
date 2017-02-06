@@ -23,6 +23,14 @@ public class FrontEnd {
 
 	public static void add(Request peticion) {
 		cola.add(peticion);
+	}	
+
+	public static ArrayList<String[]> getServers() {
+		return servers;
+	}
+
+	public static void setServers(ArrayList<String[]> servers) {
+		FrontEnd.servers = servers;
 	}
 
 	public static Request next() {
@@ -37,8 +45,8 @@ public class FrontEnd {
 		cola = new ArrayList<Request>();
 		ServerIPList lista = new ServerIPList();
 		servers = lista.getIplist();
-//		UserList usuarios = new UserList();
-//		users = usuarios.getUserList();
+		UserList usuarios = new UserList();
+		users = usuarios.getUserList();
 		startServer();
 		startClient();
 	}
@@ -87,16 +95,18 @@ public class FrontEnd {
 				while (true) {
 					if (!cola.isEmpty()) {
 						System.out.println("New request found.");
-						try {
-							new FrontEndClientThread(servers.get(counter % numServers), cola.get(0));
-							cola.remove(0);
-						} catch (ConnectException ce) {
-
+						Request r = cola.remove(0);
+						try {							
+							new FrontEndClientThread(servers.get(counter % numServers), r);
+						} catch (Exception ce) {
+							if(r.getReq().getId() != 1){
+								cola.add(r);
+							}
 						}
 						counter++;
 					}
 					try {
-						Thread.sleep(10);
+						Thread.sleep(100);
 					} catch (InterruptedException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();

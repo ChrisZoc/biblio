@@ -5,6 +5,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 import java.net.ConnectException;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 
 import serial.Chunk;
@@ -16,20 +17,18 @@ public class FrontEndClientThread implements Runnable {
 	Chunk toSend;
 	ObjectOutput toClient;
 
-	public FrontEndClientThread(String[] server, Request peticion) throws ConnectException {
+	public FrontEndClientThread(String[] server, Request peticion) throws Exception {
 		runner = new Thread(this);
 		this.soc = peticion.getSoc();
 		this.toSend = peticion.getReq();
 		this.toClient = peticion.getToClient();
 		try {
+			System.out.println("Connecting to back-end...");
 			servsoc = new Socket(server[0], Integer.parseInt(server[1]));
-		} catch (ConnectException e) {
-			System.out.println("Server at " + server[0] + ":" + server[1] + "is down.");
+		} catch (Exception e) {
+			System.out.println("Server at " + server[0] + ":" + server[1] + " is down.");
 			e.printStackTrace();
 			throw e;
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
 		System.out.println("Initializing ClientThread...");
 		runner.run();

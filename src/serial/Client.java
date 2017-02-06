@@ -1,41 +1,27 @@
 package serial;
 
-import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.EventQueue;
-import java.awt.TextArea;
-
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
-import javafx.scene.text.Font;
 import javax.swing.JButton;
 import java.awt.event.ActionListener;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.ByteArrayInputStream;
-import java.io.DataInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.ObjectInput;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.net.ConnectException;
-import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.awt.event.ActionEvent;
 import javax.swing.JTextArea;
-import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.JLabel;
@@ -58,6 +44,7 @@ public class Client extends JFrame {
 	int i = 0;
 	String aux = "";
 	JTextArea textArea;
+
 	public static void main(String[] args) {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
@@ -87,14 +74,17 @@ public class Client extends JFrame {
 		btnCargar.setEnabled(false);
 		btnCargar.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				try{
+				try {
 
-					soc=new Socket(host, port);
+					soc = new Socket(host, port);
 					Chunk d = new Chunk();
-					System.out.println("Initializing client for new book streams...");
+					System.out.println("Initializing streams...");
 					OutputStream out = soc.getOutputStream();
 					InputStream in = soc.getInputStream();
-					ObjectOutput toClient = new ObjectOutputStream(out);
+					ObjectOutput toServer = new ObjectOutputStream(out);
+					toServer.flush();
+					ObjectInput fromServer = new ObjectInputStream(in);
+					System.out.println("Streams ready.");
 					Path path = Paths.get(ruta);
 					byte[] data;
 					data = Files.readAllBytes(path);
@@ -102,20 +92,39 @@ public class Client extends JFrame {
 					d.setName(path.getFileName().toString());
 					d.setId(1);
 					System.out.println("File ready for transfer...");
-					toClient.writeObject(d);
+					toServer.writeObject(d);
+					toServer.flush();
 					System.out.println("Chunk with file '" + path.getFileName().toString() + "' has been sent!");
-					JOptionPane.showMessageDialog(null, "Nuevo libro cargado exitosamente!");
-					aux = path.getFileName().toString() + "                                ";
-					lista += aux.substring(0, 25) + "código del libro:" + i + "\n";
-					textArea.setText(lista);
-					i++;
+					try {
+						d = (Chunk) fromServer.readObject();
+					} catch (ClassNotFoundException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
+					if (d.getId() == 1) {
+						JOptionPane.showMessageDialog(null, "Nuevo libro cargado exitosamente!");
+						ArrayList<String> list = d.getList();
+						System.out.println("Loading books...");
+						if (list.size() != 0) {
+							for (String book : list) {
+								aux = "Código:" + i + "                                ";
+								lista += aux.substring(0, 15) + book + "\n";
+								i++;
+							}
+						} else {
+							lista = "No hay libros disponibles";
+						}
+						textArea.setText(lista);
+					} else {
+						JOptionPane.showMessageDialog(null, "Error durante la carga.");
+					}
 
-					toClient.flush();
-					toClient.close();
+					toServer.flush();
+					toServer.close();
 				} catch (IOException e1) {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
-				}finally {
+				} finally {
 					// Closing the socket
 					try {
 						soc.close();
@@ -159,8 +168,8 @@ public class Client extends JFrame {
 					soc = new Socket(host, port);
 					System.out.println("Connected.");
 
-					Chunk d =null;
-					d=new Chunk();
+					Chunk d = null;
+					d = new Chunk();
 
 					System.out.println("Initializing streams...");
 					OutputStream out = soc.getOutputStream();
@@ -229,7 +238,7 @@ public class Client extends JFrame {
 		btnDescargarUnLibro.setBounds(20, 249, 182, 23);
 		contentPane.add(btnDescargarUnLibro);
 
-		JButton btnCargarUnLibro = new JButton("Escojer un libro para subir");
+		JButton btnCargarUnLibro = new JButton("Escoger un libro para subir");
 		btnCargarUnLibro.setEnabled(false);
 		btnCargarUnLibro.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
@@ -297,15 +306,18 @@ public class Client extends JFrame {
 
 				d = (Chunk) fromServer.readObject();
 				System.out.println("List received.");
-				if(d.getId()==1){
+				if (d.getId() == -1) {
 					ArrayList<String> list = d.getList();
 					System.out.println("Loading books...");
-					if(list.size()!=0){
+					if (list.size() != 0) {
 						for (String book : list) {
-							aux = book + "                                ";
-							lista += aux.substring(0, 25) + "código del libro:" + i + "\n";
+							aux = "Código:" + i + "                                ";
+							lista += aux.substring(0, 15) + book + "\n";
 							i++;
-						}}else{System.out.println("lista vacia");}
+						}
+					} else {
+						lista = "No hay libros disponibles";
+					}
 					textArea.setText(lista);
 					btnCargarLibros.setEnabled(false);
 					btnCargarUnLibro.setEnabled(true);
@@ -313,7 +325,7 @@ public class Client extends JFrame {
 					fromServer.close();
 					out.flush();
 					in.close();
-				}else if(d.getId()==0){
+				} else if (d.getId() == 0) {
 					JOptionPane.showMessageDialog(null, "El usuario no está registrado ");
 				}
 			}
