@@ -1,10 +1,12 @@
 package front;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.ObjectInput;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.net.Socket;
 
 import serial.Chunk;
@@ -25,8 +27,13 @@ public class FrontEndServerThread implements Runnable {
 	public void run() {
 		try {
 			Chunk d;
-			ObjectInput fromClient = new ObjectInputStream(soc.getInputStream());
-			ObjectOutput toClient = new ObjectOutputStream(soc.getOutputStream());
+			System.out.println("Initializing streams...");
+			OutputStream out = soc.getOutputStream();
+			InputStream in = soc.getInputStream();
+			ObjectOutput toClient = new ObjectOutputStream(out);
+			toClient.flush();
+			ObjectInput fromClient = new ObjectInputStream(in);
+			System.out.println("Streams ready.");
 			registered = false;
 			try {
 				d = (Chunk) fromClient.readObject();

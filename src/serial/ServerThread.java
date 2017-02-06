@@ -1,26 +1,25 @@
 package serial;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInput;
 import java.io.ObjectInputStream;
+import java.io.ObjectOutput;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 
 public class ServerThread implements Runnable {
 	private Thread runner;
 	private Socket soc;
-	private String clientIP;
 
 	public ServerThread(Socket ss) {
 		runner = new Thread(this);
 		soc = ss;
-		clientIP = soc.getInetAddress().getHostAddress();
 		System.out.println("Initializing ServerThread...");
 		runner.run();
 	}
@@ -29,81 +28,48 @@ public class ServerThread implements Runnable {
 	public void run() {
 		try {
 			Chunk d = null;
-			InputStream o = null;
-			ObjectInput s = null;
-			FileOutputStream fos = null;
-			o = soc.getInputStream();
-			s = new ObjectInputStream(o);
+			System.out.println("Initializing streams...");
+			OutputStream out = soc.getOutputStream();
+			InputStream in = soc.getInputStream();
+			ObjectOutput toClient = new ObjectOutputStream(out);
+			toClient.flush();
+			ObjectInput fromClient = new ObjectInputStream(in);
+
+			System.out.println("Streams ready.");
 			try {
-				d = (Chunk) s.readObject();
+				System.out.println("Reading InputStream...");
+				d = (Chunk) fromClient.readObject();
+				System.out.println("Chunk with id " + d.getId() + " received.");
+				File sharedFolder = new File("./SharedFolder");
 
-				if (d.getId() == -2) { // initial sync for a client
-					ArrayList<String> clientFileList = new ArrayList<String>();
-					ArrayList<String> serverFileList = new ArrayList<String>();
+				if (d.getId() == -1) { // list request					
+					d.setToSyncList(sharedFolder.list());
+					System.out.println("Files in the shared folder:");
 					for (String file : d.getToSyncList()) {
-						clientFileList.add(file);
+						System.out.println("> " + file);
 					}
-					for (String file : p2p.getActualFileList()) {
-						serverFileList.add(file);
+					toClient.writeObject(d);
+				} else if (d.getId() == 0){ // download book
+					int id = Integer.parseInt(d.getName());
+					String filename = sharedFolder.list()[id];
+					System.out.println("The book with id '" + id + "' has been requested ");
+					
+					Path path = Paths.get("./SharedFolder/" + filename);
+					byte[] data;
+					System.out.println("File ready for transfer.");
+					try {
+						data = Files.readAllBytes(path);
+						d.setInfo(data);
+						d.setName(filename);
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
 					}
-					ArrayList<String> unsyncedFileList = (ArrayList<String>) serverFileList.clone();
-					unsyncedFileList.removeAll(clientFileList);
-					Chunk toSend = null;
-					if (unsyncedFileList.size() > 0) {
-						boolean complete = false;
-						for (String file : unsyncedFileList) {
-							Path path = Paths.get(p2p.getSharedfolder() + "/" + file);
-							byte[] data;
-							File archivo = new File(String.valueOf(path));
-							do {
-								System.out.println("File is being copied, waiting...");
-								try {
-									complete = p2p.isCompletelyWritten(archivo);
-								} catch (InterruptedException e) {
-									// TODO Auto-generated catch block
-									e.printStackTrace();
-								}
-							} while (!complete);
-							System.out.println("File ready for transfer, syncing...");
-							try {
-								data = Files.readAllBytes(path);
-								toSend = new Chunk();
-								toSend.setInfo(data);
-								toSend.setName(String.valueOf(file));
-								toSend.setId(0);
-							} catch (IOException e) {
-								// TODO Auto-generated catch block
-								e.printStackTrace();
-							}
-							new ClientThread(clientIP, p2p.getPort(), toSend);
-						}
-					}
-					clientFileList.removeAll(serverFileList);
-					if (clientFileList.size() > 0) {
-						for (String file : clientFileList) {
-							toSend = new Chunk();
-							toSend.setName(String.valueOf(file));
-							toSend.setId(-1);
-							new ClientThread(clientIP, p2p.getPort(), toSend);
-						}
-					}
-
-				} else if (d.getId() == -1) { // delete file
-					File toDelete = new File(p2p.getSharedfolder() + "/" + d.getName());
-
-					if (toDelete.delete()) {
-						p2p.setListRequiresUpdate(true);
-						System.out.println(d.getName() + " has been deleted!");
-					} else {
-						System.out.println("Delete operation has failed.");
-					}
-				} else { // new file
-					System.out.println("The file '" + d.getName() + "' has been Received ");
-
-					fos = new FileOutputStream(p2p.getSharedfolder() + "/" + d.getName());
-					p2p.setListRequiresUpdate(true);
-					fos.write(d.getInfo());
-					fos.close();
+					toClient.writeObject(d);
+					System.out.println(
+							"Chunk with file '" + filename + "' has been sent!");
+					toClient.flush();
+					toClient.close();
 				}
 				System.out.println("Terminating ServerThread...");
 				soc.close();

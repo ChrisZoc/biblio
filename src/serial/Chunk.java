@@ -2,6 +2,7 @@ package serial;
 
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 
 public class Chunk implements Serializable{
 	
