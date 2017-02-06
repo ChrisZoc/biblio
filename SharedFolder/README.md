@@ -1,3 +1,4 @@
+
 # LiteBox
 Distributed application that provides shared folder service
 
@@ -74,3 +75,4 @@ Start app as service:
 
 Stop service:
 `sudo service liteP2Pbox stop`
+
