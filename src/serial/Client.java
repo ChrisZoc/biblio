@@ -147,6 +147,7 @@ public class Client extends JFrame {
 				        } catch (Exception ex) {
 				            ex.printStackTrace();
 				        }
+				        receive.close();
 				    }
 					
 				} catch (IOException e1) {
