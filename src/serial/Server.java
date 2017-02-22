@@ -19,6 +19,7 @@ public class Server {
 	}
 
 	public static void main(String[] args) throws IOException {
+		port = Integer.parseInt(args[0]);
 		File sharedFolder = new File(sharedfolder);
 		if (!sharedFolder.exists()) {
 			sharedFolder.mkdirs();

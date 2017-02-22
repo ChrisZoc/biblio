@@ -24,7 +24,8 @@ public class FrontEndClientThread implements Runnable {
 		this.toClient = peticion.getToClient();
 		try {
 			System.out.println("Connecting to back-end...");
-			servsoc = new Socket(server[0], Integer.parseInt(server[1]));
+			servsoc = new Socket();
+			servsoc.connect(new InetSocketAddress(server[0], Integer.parseInt(server[1])), 1000);
 		} catch (Exception e) {
 			System.out.println("Server at " + server[0] + ":" + server[1] + " is down.");
 			e.printStackTrace();
