@@ -93,7 +93,7 @@ public class FrontEnd {
 				int counter = 0;
 
 				while (true) {
-					if (!cola.isEmpty()) {
+					if (cola.size()!=0) {
 						System.out.println("New request found.");
 						Request r = cola.remove(0);
 						try {							
