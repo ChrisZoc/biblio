@@ -53,23 +53,20 @@ public class FrontEndClientThread implements Runnable {
 			d = (Chunk) fromServer.readObject();
 			System.out.println("Chunk with id '" + toSend.getId() + "' received from server.");
 			
-			toClient.writeObject(d);
-			System.out.println("Chunk with id '" + toSend.getId() + "' sent to client.");
-			toClient.flush();
+			try {
+				toClient.writeObject(d);
+				System.out.println("Chunk with id '" + toSend.getId() + "' sent to client.");
+				toClient.flush();
+				soc.close();
+			} catch (Exception e){
+			}
 
-			soc.close();
 			servsoc.close();
 			System.out.println("Terminating ClientThread...");
 			runner.join();
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
 			System.out.println("Error during serialization");
-			try {
-				runner.join();
-			} catch (InterruptedException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
 		}
 	}
 
