@@ -64,7 +64,12 @@ public class FrontEndClientThread implements Runnable {
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
 			System.out.println("Error during serialization");
-			//System.exit(1);
+			try {
+				runner.join();
+			} catch (InterruptedException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
 		}
 	}
 
